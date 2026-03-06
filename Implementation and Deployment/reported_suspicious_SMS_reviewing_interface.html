@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Review Reported SMS</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f4f4f9; margin: 20px; }
+        .container { max-width: 900px; margin: auto; }
+        .report-card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); margin-bottom: 15px; }
+        .report-content { border-left: 4px solid #eee; padding-left: 10px; margin-bottom: 15px; white-space: pre-wrap; }
+        .report-meta { font-size: 0.8em; color: #666; }
+        .actions button { margin-right: 10px; padding: 8px 12px; border: none; border-radius: 4px; font-size: 0.9em; cursor: pointer; }
+        .approve-btn { background-color: #28a745; color: white; }
+        .reject-btn { background-color: #dc3545; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Pending SMS Reports for Review</h1>
+        <p>Review the messages below. 'Approve' will mark them as confirmed fraud for the next training cycle. 'Reject' will mark them as legitimate for the next training cycle.</p>
+        <hr>
+        {% if reports %}
+            {% for report in reports %}
+            <div class="report-card" id="card-{{ report.id }}">
+                <p class="report-meta">Report ID: {{ report.id }} | Received: {{ report.reported_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                <div class="report-content">
+                    <p>{{ report.message_content }}</p>
+                </div>
+                <div class="actions">
+                    <button class="approve-btn" onclick="updateStatus({{ report.id }}, 'approve')">Approve</button>
+                    <button class="reject-btn" onclick="updateStatus({{ report.id }}, 'reject')">Reject</button>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p>No pending reports to review.</p>
+        {% endif %}
+    </div>
+
+    <script>
+        async function updateStatus(reportId, action) {
+            try {
+                const response = await fetch(`/${action}/${reportId}`, {
+                    method: 'POST'
+                });
+
+                if (response.ok) {
+                    const card = document.getElementById(`card-${reportId}`);
+                    card.style.opacity = 0;
+                    // Remove the card from view after a fade-out effect
+                    setTimeout(() => { card.style.display = 'none'; }, 600);
+                } else {
+                    const result = await response.json();
+                    alert('Error: ' + result.detail);
+                }
+            } catch (error) {
+                alert('A network error occurred.');
+            }
+        }
+    </script>
+</body>
+</html>

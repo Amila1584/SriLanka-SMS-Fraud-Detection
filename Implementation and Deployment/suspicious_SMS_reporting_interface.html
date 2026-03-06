@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Suspicious SMS</title>
+    <style>
+        body { font-family: sans-serif; background-color: #f4f4f9; margin: 40px; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        textarea { width: 95%; height: 150px; padding: 10px; font-size: 1em; border-radius: 4px; border: 1px solid #ccc; }
+        button { background-color: #007bff; color: white; padding: 10px 15px; border: none; border-radius: 4px; font-size: 1em; cursor: pointer; }
+        button:hover { background-color: #0056b3; }
+        #response { margin-top: 20px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Report a Suspicious SMS</h2>
+        <p>If you received a fraudulent SMS that was not detected, please paste the full message below to help improve our system.</p>
+        <textarea id="messageInput" placeholder="Paste SMS content here..."></textarea>
+        <br><br>
+        <button onclick="submitReport()">Submit Report</button>
+        <p id="response"></p>
+    </div>
+
+    <script>
+        async function submitReport() {
+            const messageContent = document.getElementById('messageInput').value;
+            const responseElement = document.getElementById('response');
+
+            if (!messageContent.trim()) {
+                responseElement.textContent = 'Please enter a message.';
+                responseElement.style.color = 'red';
+                return;
+            }
+
+            try {
+                const response = await fetch('/report', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ message: messageContent })
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    responseElement.textContent = result.message;
+                    responseElement.style.color = 'green';
+                    document.getElementById('messageInput').value = '';
+                } else {
+                    responseElement.textContent = 'Error: ' + result.detail;
+                    responseElement.style.color = 'red';
+                }
+            } catch (error) {
+                responseElement.textContent = 'A network error occurred. Please try again.';
+                responseElement.style.color = 'red';
+            }
+        }
+    </script>
+</body>
+</html>
